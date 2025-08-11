@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payment Successful</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      }
+      
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #f8fafc;
+        color: #1e293b;
+      }
+      
+      .card {
+        width: 92vw;
+        max-width: 720px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        background: #ffffff;
+      }
+      
+      .icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        margin: 0 auto 12px;
+        background: #e6f7ec;
+        color: #1f7a31;
+        font-size: 24px;
+      }
+      
+      .title {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 6px 0 8px;
+      }
+      
+      .subtitle {
+        font-size: 16px;
+        color: #555555;
+        margin: 0;
+      }
+      
+      .hint {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #777777;
+      }
+      
+      .btn {
+        margin-top: 16px;
+        display: inline-block;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        background: #f9fafb;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      
+      .btn:active {
+        background: #e5e7eb;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card" role="main" aria-live="polite">
+      <div class="icon" aria-hidden="true">✅</div>
+      <h1 class="title">Payment Successful</h1>
+      <p id="subtitle" class="subtitle">This window will close automatically...</p>
+      <p id="hint" class="hint" style="display:none">Some browsers only allow closing windows opened by a script.</p>
+      <button id="closeBtn" class="btn" style="display:none" type="button" aria-label="Close this window">Close window</button>
+      <noscript>
+        <p class="hint">JavaScript is required to close this window automatically.</p>
+      </noscript>
+    </main>
+
+    <script>
+      function tryCloseWindow() {
+        let isClosed = false;
+        try {
+          window.close();
+          isClosed = window.closed === true;
+        } catch (_) {}
+
+        if (!isClosed) {
+          try {
+            window.open('', '_self');
+            window.close();
+            isClosed = window.closed === true;
+          } catch (_) {}
+        }
+
+        return isClosed;
+      }
+
+      function notifyParent() {
+        try {
+          if (window.opener) {
+            window.opener.postMessage({ 
+              type: 'payment-success',
+              timestamp: Date.now()
+            }, '*');
+          }
+        } catch (_) {}
+      }
+
+      window.addEventListener('DOMContentLoaded', function () {
+        const subtitle = document.getElementById('subtitle');
+        const hint = document.getElementById('hint');
+        const closeBtn = document.getElementById('closeBtn');
+        
+        notifyParent();
+        
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function () {
+            const closed = tryCloseWindow();
+            if (!closed) {
+              if (subtitle) subtitle.textContent = 'Please close this tab manually.';
+              if (hint) hint.style.display = 'block';
+            }
+          });
+        }
+        
+        setTimeout(function () {
+          const closed = tryCloseWindow();
+          if (!closed) {
+            if (subtitle) subtitle.textContent = 'If this tab does not close automatically, you can close it manually.';
+            if (hint) hint.style.display = 'block';
+            if (closeBtn) closeBtn.style.display = 'inline-block';
+          }
+        }, 3000);
+      });
+    </script>
+  </body>
+</html>
